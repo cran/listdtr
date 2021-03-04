@@ -1,9 +1,9 @@
-c1f2fbc14770552c6a047a519a5b1284 *DESCRIPTION
-630b5dd7cdee367b015b1bfc42f7d1bd *NAMESPACE
-00bffb0be1abc2ffa5bca22f5fd965e2 *R/dtr.R
-58c2a2b8e215dfb6d4fad34a078bad2b *R/krr.R
-769ed9cf60f2d03b3d9dd1c48cad632e *R/rule.R
-a204f0069f615c1fdee9c07039998091 *build/partial.rdb
+bc0ab223edf2fb0b6676e16a57ac968d *DESCRIPTION
+4677c43847fc69a20c095e9c188f567c *NAMESPACE
+f2116b3af5aa2a6771450bbd9c8bffed *R/dtr.R
+107680bfcfaaa726f54bef775cefa886 *R/krr.R
+823d2ff67b7d4e72891afb9882eb7e6c *R/rule.R
+7878ee26f211c86745adbde6835b647b *build/partial.rdb
 b0b8836fff81e139fde297023ac51448 *man/build.rule.Rd
 4dd2c38322ff94684a4b8e88a3098ee1 *man/krr.Rd
 4f3c20d507455082394c586c68109353 *man/listdtr-package.Rd
@@ -13,7 +13,7 @@ a1c2b0577a02911b6d83b6dc1ca7ffe6 *man/predict.krr.Rd
 e4816a6c5c52a873da99535b984be455 *man/predict.listdtr.Rd
 43e88e4c6990299205bc3eb108b3739a *man/print.listdtr.Rd
 619d13ce6900fca2139e2139408d39ad *src/Makevars
-e0e9151986778d796c167c7af1a97874 *src/R_interface.c
+e261c20355a6d06e1d1577042fcbcc7c *src/R_interface.c
 6e3d547d0bc99a46269017245cd2433b *src/clause.c
 a487f795c356574aa339fcc43a69d3fd *src/dtr.h
 fa8575adc657fa93d70833ef9afea9c6 *src/gaussian_kernel.c

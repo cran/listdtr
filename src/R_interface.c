@@ -107,7 +107,7 @@ SEXP R_get_regrets_from_outcomes(SEXP R_outcomes)
 
 
 
-SEXP R_save_rule_as_list(const statement *restrict rule,
+static SEXP R_save_rule_as_list(const statement *restrict rule,
     const unsigned int rule_length)
 {
     SEXP R_list;
@@ -180,7 +180,7 @@ SEXP R_save_rule_as_list(const statement *restrict rule,
 
 
 
-statement *R_change_list_into_rule(SEXP R_list, unsigned int *rule_length)
+static statement *R_change_list_into_rule(SEXP R_list, unsigned int *rule_length)
 {
     SEXP R_a, R_type, R_j1, R_j2, R_c1, R_c2;
     R_a    = VECTOR_ELT(R_list, 0);
@@ -277,3 +277,20 @@ SEXP R_cv_tune_rule(SEXP R_z, SEXP R_regrets,
 
 
 
+
+static const R_CallMethodDef callMethods[]  = {
+    {"R_kernel_train", (DL_FUNC) & R_kernel_train, 5},
+    {"R_kernel_predict", (DL_FUNC) & R_kernel_predict, 2},
+    {"R_get_regrets_from_outcomes", (DL_FUNC) & R_get_regrets_from_outcomes, 1},
+    {"R_find_rule", (DL_FUNC) & R_find_rule, 6},
+    {"R_apply_rule", (DL_FUNC) & R_apply_rule, 2},
+    {"R_cv_tune_rule", (DL_FUNC) & R_cv_tune_rule, 7},
+    {NULL, NULL, 0}
+};
+
+void R_init_listdtr(DllInfo *dll)
+{
+   R_registerRoutines(dll, NULL, callMethods, NULL, NULL);
+   R_useDynamicSymbols(dll, FALSE);
+   R_forceSymbols(dll, TRUE);
+}

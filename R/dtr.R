@@ -1,5 +1,5 @@
-listdtr <- function(y, a, x, stage.x, seed = NULL, 
-  kfolds = 5L, fold = NULL, 
+listdtr <- function(y, a, x, stage.x, seed = NULL,
+  kfolds = 5L, fold = NULL,
   maxlen = 10L, zeta.choices = NULL, eta.choices = NULL)
 {
   if (!is.matrix(y)) {
@@ -20,7 +20,7 @@ listdtr <- function(y, a, x, stage.x, seed = NULL,
   n.stage <- ncol(y)
   dtr <- vector("list", n.stage)
   future.y <- double(n)
-  
+
   if (is.null(colnames(a))) {
     colnames(a) <- paste0("a", 1L : n.stage)
   }
@@ -35,7 +35,7 @@ listdtr <- function(y, a, x, stage.x, seed = NULL,
     }
     fold <- rep_len(1L : kfolds, n)[sample.int(n)]
   }
-  
+
   for (i.stage in n.stage : 1L) {
     current.x <- cbind(
       x[, which(stage.x <= i.stage), drop = FALSE],
@@ -52,12 +52,12 @@ listdtr <- function(y, a, x, stage.x, seed = NULL,
     outcomes <- predict(model, current.x)
     regrets <- get.regrets(outcomes)
 
-    obj <- build.rule.cv(current.x, regrets, 
+    obj <- build.rule.cv(current.x, regrets,
       kfolds, fold, maxlen, zeta.choices, eta.choices)
     dtr[[i.stage]] <- obj
     future.y <- outcomes[cbind(1L : n, obj$action)]
   }
-  
+
   class(dtr) <- "listdtr"
   dtr
 }
@@ -101,7 +101,7 @@ plot.listdtr <- function(x, stages = NULL, digits = 3L, ...)
   if (is.null(stages)) {
     stages <- seq_along(object)
   }
-  figures <- lapply(stages, function(i.stage) 
+  figures <- lapply(stages, function(i.stage)
     draw.rule(object[[i.stage]], digits))
   if (length(stages) <= 1L) {
     print(figures[[1L]] + ggtitle("Stage 1"))
@@ -110,12 +110,9 @@ plot.listdtr <- function(x, stages = NULL, digits = 3L, ...)
     pushViewport(viewport(layout = grid.layout(1L, length(stages))))
 
     for (i in seq_len(length(stages))) {
-      print(figures[[i]] + ggtitle(sprintf("Stage %d", stages[i])), 
+      print(figures[[i]] + ggtitle(sprintf("Stage %d", stages[i])),
         vp = viewport(layout.pos.row = 1L, layout.pos.col = i))
     }
   }
   invisible(object)
 }
-
-
-

@@ -22,10 +22,10 @@ build.rule <- function(x, y, maxlen = 10L,
   if (is.null(options)) {
     options <- as.character(seq_len(ncol(y)))
   }
-  rule <- .Call("R_find_rule", x, y, zeta, eta, maxlen, action)
+  rule <- .Call(R_find_rule, x, y, zeta, eta, maxlen, action)
   action <- action + 1L
 
-  object <- list(rule = rule, options = options, 
+  object <- list(rule = rule, options = options,
     variables = variables, action = action)
   object
 }
@@ -34,7 +34,7 @@ build.rule <- function(x, y, maxlen = 10L,
 
 
 build.rule.cv <- function(x, y, kfolds = 5L, fold = NULL,
-  maxlen = 10L, zeta.choices = NULL, eta.choices = NULL, 
+  maxlen = 10L, zeta.choices = NULL, eta.choices = NULL,
   cv.only = FALSE)
 {
   if (!is.matrix(x) || ncol(x) < 2) {
@@ -47,8 +47,12 @@ build.rule.cv <- function(x, y, kfolds = 5L, fold = NULL,
 
   simple.loss <- min(colMeans(y))
   if (simple.loss < 1e-8) {
-    zeta.selected <- simple.loss * n
-    eta.selected <- simple.loss * n
+    big <- (1 + max(y)) * n
+    zeta.selected <- big
+    eta.selected <- big
+    zeta.choices <- zeta.selected
+    eta.choices <- eta.selected
+    cv.loss <- simple.loss
   } else {
     if (is.null(zeta.choices) || is.null(eta.choices)) {
       zeta.grid <- simple.loss * c(2, 0.75, 0.3, 0.12, 0.05)
@@ -68,10 +72,10 @@ build.rule.cv <- function(x, y, kfolds = 5L, fold = NULL,
     }
     fold <- fold - 1L
 
-    cv.loss <- .Call("R_cv_tune_rule", x, y,
+    cv.loss <- .Call(R_cv_tune_rule, x, y,
       zeta.choices, eta.choices, maxlen, fold, kfolds)
     min.cv.loss <- min(cv.loss)
-    
+
     if (min.cv.loss > simple.loss - 1e-8) {
       zeta.selected <- simple.loss * n
       eta.selected <- simple.loss * n
@@ -83,7 +87,7 @@ build.rule.cv <- function(x, y, kfolds = 5L, fold = NULL,
   }
 
   cv <- list(
-    zeta.selected = zeta.selected, 
+    zeta.selected = zeta.selected,
     eta.selected = eta.selected,
     metrics = data.frame(
       zeta.choices = zeta.choices,
@@ -95,14 +99,14 @@ build.rule.cv <- function(x, y, kfolds = 5L, fold = NULL,
     object <- build.rule(x, y, maxlen, zeta.selected, eta.selected)
     object$cv <- cv
   }
-  
+
   object
 }
 
 
 
 
-apply.rule <- function(object, xnew, 
+apply.rule <- function(object, xnew,
   what = c("label", "index"))
 {
   what <- match.arg(what)
@@ -110,11 +114,11 @@ apply.rule <- function(object, xnew,
     xnew <- cbind(x = xnew, dummy_ = 0)
   }
 
-  action <- .Call("R_apply_rule", object$rule, xnew) + 1L
+  action <- .Call(R_apply_rule, object$rule, xnew) + 1L
   if (what == "label") {
     action <- factor(object$options, object$options)[action]
   }
-  
+
   action
 }
 
@@ -125,21 +129,21 @@ verbalize.rule <- function(object, digits = 3L)
 {
   options <- object$options
   variables <- object$variables
-  
+
   d <- object$rule
   op1 <- ifelse(substring(d[, "type"], 1L, 1L) == "L", "<=", ">")
   op2 <- ifelse(substring(d[, "type"], 2L, 2L) == "L", "<=", ">")
   var1 <- variables[d[, "j1"]]
   var2 <- variables[d[, "j2"]]
-  term1 <- ifelse(is.finite(d[, "c1"]), 
+  term1 <- ifelse(is.finite(d[, "c1"]),
     paste(var1, op1, formatC(d[, "c1"], digits, 0L, "f")), "")
-  term2 <- ifelse(is.finite(d[, "c2"]), 
+  term2 <- ifelse(is.finite(d[, "c2"]),
     paste(var2, op2, formatC(d[, "c2"], digits, 0L, "f")), "")
   cond <- ifelse(nchar(term1) > 0L & nchar(term2) > 0L,
     paste(term1, "and", term2), paste0(term1, term2))
   act <- options[d[, "a"] + 1L]
-  
-  data.frame(conditions = cond, actions = act, 
+
+  data.frame(conditions = cond, actions = act,
     stringsAsFactors = FALSE)
 }
 
@@ -153,10 +157,10 @@ show.rule <- function(object, digits = 3L)
     cat("Always ", v[1L, 2L], ".\n", sep = "")
     return(invisible(object))
   }
-  
+
   clauses <- apply(v, 1, function(clause) {
-    ifelse(nchar(clause[1L]) > 0L, 
-      paste0("If ", clause[1L], " then ", clause[2L], ";"), 
+    ifelse(nchar(clause[1L]) > 0L,
+      paste0("If ", clause[1L], " then ", clause[2L], ";"),
       paste0("Else ", clause[2L], "."))
   })
   cat(clauses, sep = "\n")
@@ -177,14 +181,14 @@ draw.rule <- function(object, digits = 3L, filepath = NULL)
     theme(line = element_blank(), rect = element_blank(),
       axis.text = element_blank(), axis.title = element_blank())
   scale <- 25.4  # 25.4 / 0.35277777777778
-  
+
   len <- length(conditions) - 1L
-  
+
   ratio <- 1.2
   bg.condition <- rgb(240, 230, 210, maxColorValue = 255)
   bg.action <- rgb(210, 230, 240, maxColorValue = 255)
   bg.arrow <- rgb(0, 100, 0, maxColorValue = 255)
-  
+
   # computes sizes
   h <- max(strheight(c(" ", "T", "F"), "inches"),
     sapply(conditions, strheight, units = "inches"),
@@ -194,14 +198,14 @@ draw.rule <- function(object, digits = 3L, filepath = NULL)
   w2 <- max(strheight(c(" ", "T", "F"), "inches"),
     sapply(actions, strwidth, units = "inches")) * ratio
   horigap <- strwidth(" T ", "inches") * ratio
-  vertgap <- (strheight("F", "inches") 
+  vertgap <- (strheight("F", "inches")
     + 0.4 * strheight(" ", "inches")) * ratio
   line.width <- min(w1 * 0.03, w2 * 0.03, h * 0.1)
-  
+
   h0 <- (h + vertgap) * (len + 1L)
   w0 <- w1 + horigap + w2
   p <- p + coord_cartesian(c(0, w0), c(0, h0))
-  
+
   x1 <- rep.int(0, len)
   y1 <- h0 - (h + vertgap) * seq_len(len)
   x2 <- x1 + w1
@@ -211,8 +215,8 @@ draw.rule <- function(object, digits = 3L, filepath = NULL)
   if (len) {
     df.condition <- data.frame(
       x1 = x1, y1 = y1, x2 = x2, y2 = y2, x3 = x3, y3 = y3,
-      h = h, w1 = w1, w2 = w2, 
-      horigap = horigap, vertgap = vertgap, 
+      h = h, w1 = w1, w2 = w2,
+      horigap = horigap, vertgap = vertgap,
       line.width = line.width)
   }
 
@@ -224,55 +228,55 @@ draw.rule <- function(object, digits = 3L, filepath = NULL)
   y6 <- (y4 + y5) / 2
   df.action <- data.frame(
     x4 = x4, y4 = y4, x5 = x5, y5 = y5, x6 = x6, y6 = y6,
-    h = h, w1 = w1, w2 = w2, 
+    h = h, w1 = w1, w2 = w2,
     horigap = horigap, vertgap = vertgap)
-  
+
   if (len) {
     # draws arrows
     p <- p + geom_segment(
-      aes(x = x3, y = y1 + h + vertgap, xend = x3, yend = y1 + h), 
+      aes(x = x3, y = y1 + h + vertgap, xend = x3, yend = y1 + h),
       df.condition,
       size = line.width * scale, col = bg.arrow,
       arrow = arrow(length = unit(vertgap / 3, "inches")))
-  
+
     p <- p + geom_segment(
-      aes(x = x2, y = y3, xend = x2 + horigap, yend = y3), 
+      aes(x = x2, y = y3, xend = x2 + horigap, yend = y3),
       df.condition,
       size = line.width * scale, col = bg.arrow,
       arrow = arrow(length = unit(horigap / 3, "inches")))
-    
+
     p <- p + geom_segment(
       aes(x = w1 / 2, y = h + vertgap, xend = w1 / 2, yend = h / 2),
       df.condition,
       size = line.width * scale, col = bg.arrow)
-  
+
     p <- p + geom_segment(
       aes(x = w1 / 2, y = h / 2, xend = w1 + horigap, yend = h / 2),
       df.condition,
       size = line.width * scale, col = bg.arrow,
       arrow = arrow(length = unit(horigap / 3, "inches")))
-    
+
     # draws true and false
     p <- p + geom_text(
       aes(x = w1 / 2 + h / 5, y = y1 - vertgap / 2, label = "F"),
       df.condition,
       col = bg.arrow,
       size = h * scale * 0.75)
-  
+
     p <- p + geom_text(
       aes(x = x2 + horigap / 2, y = y3 + h / 5, label = "T"),
       df.condition,
       col = bg.arrow,
       size = h * scale * 0.75)
-  
+
     # draws conditions
     p <- p + geom_rect(
-      aes(xmin = x1, ymin = y1, xmax = x2, ymax = y2), 
+      aes(xmin = x1, ymin = y1, xmax = x2, ymax = y2),
       df.condition,
       fill = bg.condition)
-    
+
     p <- p + geom_text(
-      aes(x = x3, y = y3, label = conditions[seq_len(len)]), 
+      aes(x = x3, y = y3, label = conditions[seq_len(len)]),
       df.condition,
       size = h * scale)
   } else {  # len == 0
@@ -289,9 +293,9 @@ draw.rule <- function(object, digits = 3L, filepath = NULL)
   p <- p + geom_rect(aes(xmin = x4, ymin = y4, xmax = x5, ymax = y5),
     df.action,
     fill = bg.action)
-  
-  p <- p + geom_text(aes(x = x6, y = y6, label = actions), 
-    df.action, 
+
+  p <- p + geom_text(aes(x = x6, y = y6, label = actions),
+    df.action,
     size = h * scale)
 
   if (!is.null(filepath)) {
@@ -299,6 +303,3 @@ draw.rule <- function(object, digits = 3L, filepath = NULL)
   }
   p
 }
-
-
-

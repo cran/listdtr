@@ -11,13 +11,13 @@ krr <- function(x, y, group = NULL)
     options <- levels(group)
     group <- as.integer(group) - 1L
   }
-  
+
   var.x <- colMeans(x ^ 2L) - colMeans(x) ^ 2L
   var.x[var.x < 1e-8] <- Inf
   scaling <- 1.0 / var.x
-  model <- .Call("R_kernel_train", x, y,
+  model <- .Call(R_kernel_train, x, y,
     group, length(options), scaling)
-  
+
   object <- list(model = model, options = options)
   class(object) <- "krr"
   object
@@ -29,7 +29,7 @@ krr <- function(x, y, group = NULL)
 predict.krr <- function(object, xnew, ...)
 {
   xnew <- as.matrix(xnew)
-  ynew <- .Call("R_kernel_predict", object$model, xnew)
+  ynew <- .Call(R_kernel_predict, object$model, xnew)
   colnames(ynew) <- object$options
   ynew
 }
@@ -39,10 +39,7 @@ predict.krr <- function(object, xnew, ...)
 
 get.regrets <- function(outcomes)
 {
-  regrets <- .Call("R_get_regrets_from_outcomes", outcomes)
+  regrets <- .Call(R_get_regrets_from_outcomes, outcomes)
   colnames(regrets) <- colnames(outcomes)
   regrets
 }
-
-
-
